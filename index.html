@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Content to Excel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            text-align: center;
+            width: 100%;
+            margin: 0;
+        }
+        .date {
+            font-size: 14px;
+            color: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 18px;
+            text-align: left;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        tfoot {
+            font-weight: bold;
+            background-color: #e9e9e9;
+        }
+        .download-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .download-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="date">Date: <span id="current-date"></span></div>
+        <h1>Page Header Title</h1>
+    </div>
+
+    <p>This is a paragraph. It contains some text to demonstrate how it will be included in the Excel file.</p>
+
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>Header 1</th>
+                <th>Header 2</th>
+                <th>Header 3</th>
+                <th>Header 4</th>
+                <th>Header 5</th>
+                <th>Header 6</th>
+                <th>Header 7</th>
+                <th>Header 8</th>
+                <th>Header 9</th>
+                <th>Header 10</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Data 1</td>
+                <td>Data 2</td>
+                <td>Data 3</td>
+                <td>Data 4</td>
+                <td>Data 5</td>
+                <td>Data 6</td>
+                <td>Data 7</td>
+                <td>Data 8</td>
+                <td>Data 9</td>
+                <td>Data 10</td>
+            </tr>
+            <tr>
+                <td>Data 1</td>
+                <td>Data 2</td>
+                <td>Data 3</td>
+                <td>Data 4</td>
+                <td>Data 5</td>
+                <td>Data 6</td>
+                <td>Data 7</td>
+                <td>Data 8</td>
+                <td>Data 9</td>
+                <td>Data 10</td>
+            </tr>
+            <tr>
+                <td>Data 1</td>
+                <td>Data 2</td>
+                <td>Data 3</td>
+                <td>Data 4</td>
+                <td>Data 5</td>
+                <td>Data 6</td>
+                <td>Data 7</td>
+                <td>Data 8</td>
+                <td>Data 9</td>
+                <td>Data 10</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="10">Total: [Calculated Total]</td>
+            </tr>
+            <tr>
+                <td colspan="10">Percentage: [Calculated Percentage]</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <p>Another paragraph with some more text.</p>
+
+    <button class="download-button" onclick="downloadExcel()">Download as Excel</button>
+
+    <!-- Include the SheetJS library -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <script>
+        // Set the current date in the date span
+        const dateElement = document.getElementById('current-date');
+        const today = new Date();
+        dateElement.textContent = today.toDateString();
+
+        // Function to convert HTML content to Excel and trigger download
+        function downloadExcel() {
+            const workbook = XLSX.utils.book_new();
+            const worksheetData = [];
+
+            // Add content of each element in the body to worksheetData array
+            document.querySelectorAll('body > *').forEach(element => {
+                if (element.tagName === 'TABLE') {
+                    // Convert table to an array of arrays and merge into worksheetData
+                    const tableSheet = XLSX.utils.table_to_sheet(element);
+                    const tableData = XLSX.utils.sheet_to_json(tableSheet, { header: 1 });
+                    tableData.forEach(row => worksheetData.push(row));
+                } else if (element.tagName !== 'SCRIPT' && element.tagName !== 'STYLE' && element.tagName !== 'BUTTON' && element.textContent.trim()) {
+                    // Add other elements' text content as a new row in worksheetData
+                    worksheetData.push([element.textContent.trim()]);
+                }
+            });
+
+            // Convert the worksheetData array to a sheet
+            const contentSheet = XLSX.utils.aoa_to_sheet(worksheetData);
+            XLSX.utils.book_append_sheet(workbook, contentSheet, 'Page Content');
+
+            // Generate Excel file and download
+            const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+            function s2ab(s) {
+                const buf = new ArrayBuffer(s.length);
+                const view = new Uint8Array(buf);
+                for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+                return buf;
+            }
+
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([s2ab(wbout)], { type: 'application/octet-stream' }));
+            a.download = 'page-content.xlsx';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+    </script>
+</body>
+</html>
